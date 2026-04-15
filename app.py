@@ -1,16 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, Response, jsonify
 import requests
+import json
 
 app = Flask(__name__)
 
 VALID_KEYS = ["eris77", "swrovh336"]
-
 EXTERNAL_API = "https://hideme.eu.org/lookup?api=aadhar-info&key=eris001&aadhar={}"
-
-CREDIT_INFO = {
-    "Developer": "@iameris",
-    "BUY": "If You Want To Buy Api Contact @iameris"
-}
 
 
 @app.route("/aadhar", methods=["GET"])
@@ -23,7 +18,7 @@ def aadhar():
         return jsonify({
             "SUCCESS": False,
             "MESSAGE": "Invalid API Key",
-            **CREDIT_INFO
+            "DEVELOPER": "@iameris"
         })
 
     # 📱 VALIDATION
@@ -31,44 +26,48 @@ def aadhar():
         return jsonify({
             "SUCCESS": False,
             "MESSAGE": "Invalid Aadhar number. Please provide a valid 12-digit Aadhar number.",
-            **CREDIT_INFO
+            "DEVELOPER": "@iameris"
         })
 
     try:
         url = EXTERNAL_API.format(aadhar)
-        response = requests.get(url, timeout=10)
+        res = requests.get(url, timeout=10)
 
-        if response.status_code != 200:
+        if res.status_code != 200:
             return jsonify({
                 "SUCCESS": False,
                 "MESSAGE": "API Error",
-                **CREDIT_INFO
+                "DEVELOPER": "@iameris"
             })
 
-        # 🔥 RAW DATA (NO CHANGE)
-        data = response.json()
+        # 🔥 RAW JSON LOAD
+        try:
+            data = json.loads(res.text)
+        except:
+            return jsonify({
+                "SUCCESS": False,
+                "MESSAGE": "Invalid API Response",
+                "DEVELOPER": "@iameris"
+            })
 
-        # ✅ SUCCESS → direct return
-        if data.get("SUCCESS") == True:
-            data.pop("DEVELOPER", None)
-            data.pop("BUY", None)
-            data.pop("key_expiry", None)
+        # ✅ ONLY CHANGE USERNAME (बाकी सब same)
+        if "DEVELOPER" in data:
+            data["DEVELOPER"] = "@iameris"
 
-            data.update(CREDIT_INFO)
-            return jsonify(data)
+        if "BUY" in data:
+            data["BUY"] = "💎 Premium API Access Available — DM @iameris on Telegram to Get Started!"
 
-        # ❌ FAIL → same message
-        return jsonify({
-            "SUCCESS": False,
-            "MESSAGE": data.get("MESSAGE", "No data found for the given Aadhar number."),
-            **CREDIT_INFO
-        })
+        # 🔥 RETURN SAME STRUCTURE
+        return Response(
+            json.dumps(data, ensure_ascii=False),
+            content_type="application/json"
+        )
 
     except Exception:
         return jsonify({
             "SUCCESS": False,
             "MESSAGE": "API Error",
-            **CREDIT_INFO
+            "DEVELOPER": "@iameris"
         })
 
 
