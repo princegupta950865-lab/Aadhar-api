@@ -40,7 +40,6 @@ def aadhar():
                 "DEVELOPER": "@iameris"
             })
 
-        # 🔥 RAW JSON LOAD
         try:
             data = json.loads(res.text)
         except:
@@ -50,12 +49,15 @@ def aadhar():
                 "DEVELOPER": "@iameris"
             })
 
-        # ✅ ONLY CHANGE USERNAME (बाकी सब same)
+        # ✅ CHANGE USERNAME
         if "DEVELOPER" in data:
             data["DEVELOPER"] = "@iameris"
 
         if "BUY" in data:
             data["BUY"] = "💎 Premium API Access Available — DM @iameris on Telegram to Get Started!"
+
+        # ❌ REMOVE EXPIRY
+        data.pop("key_expiry", None)
 
         # 🔥 RETURN SAME STRUCTURE
         return Response(
